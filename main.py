@@ -10,6 +10,13 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torch.utils.data import random_split
 
+###
+import torch
+from PIL import Image
+from torchvision import transforms
+from model import MyModel
+import torch.nn.functional as F
+
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -82,6 +89,7 @@ def train_model(config):
     return model
 
 
+
 if __name__ == "__main__":
     config = {
         "epochs": 10,
@@ -94,4 +102,28 @@ if __name__ == "__main__":
         "size_train": 0.8,
     }
 
-    train_model(config)
+    model = train_model(config)
+    #To evaluate the model with on test image
+    model = model.to(device = "cpu")
+    model.eval()
+
+    # Image preprocessing
+    transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor(),
+    ])
+
+    img = Image.open("archive/car_test_image.jpg").convert("RGB")
+    x = transform(img).unsqueeze(0)
+
+    # Predict
+    with torch.no_grad():
+        logits = model(x)
+        print(logits)
+        probs = F.softmax(logits, dim=1)
+
+    print("Probabilities:", probs)
+
+    prediction = torch.argmax(probs).item()
+    print("Prediction:", "car" if prediction == 0 else "flower")
+
