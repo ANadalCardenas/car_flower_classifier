@@ -1,0 +1,3 @@
+*.pyc
+scripts/__pycache__
+archive/
